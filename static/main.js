@@ -32,6 +32,7 @@ function displayResults(data) {
     }
 }
 
+let chartInstance = null;
 function displayChart(data) {
     // Input: data (object) - contains the following keys:
     //        - documents (list) - list of documents
@@ -39,4 +40,45 @@ function displayChart(data) {
     //        - similarities (list) - list of similarities
     // TODO: Implement function to display chart here
     //       There is a canvas element in the HTML file with the id 'similarity-chart'
+    let ctx = document.getElementById('similarity-chart').getContext('2d');
+
+    // If a chart already exists, destroy it
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+    
+    // Create the bar chart
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.indices.map((index, i) => `Document ${index}`),
+            datasets: [{
+                label: 'Cosine Similarity',
+                data: data.similarities,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Cosine Similarity'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+        }
+    });
 }

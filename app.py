@@ -13,7 +13,14 @@ app = Flask(__name__)
 
 
 # TODO: Fetch dataset, initialize vectorizer and LSA here
+# Global variables for the dataset, vectorizer, and LSA model
+newsgroups = fetch_20newsgroups(subset='all')
+vectorizer = TfidfVectorizer(stop_words=stopwords.words('english'), max_features=5000)
+X_tfidf = vectorizer.fit_transform(newsgroups.data)
 
+# Apply TruncatedSVD for LSA
+svd_model = TruncatedSVD(n_components=100)
+X_lsa = svd_model.fit_transform(X_tfidf)
 
 def search_engine(query):
     """
@@ -23,6 +30,19 @@ def search_engine(query):
     """
     # TODO: Implement search engine here
     # return documents, similarities, indices 
+    # Transform the query into the same vector space
+    query_tfidf = vectorizer.transform([query])
+    query_lsa = svd_model.transform(query_tfidf)
+    
+    # Compute cosine similarities between the query and all documents
+    cosine_similarities = cosine_similarity(query_lsa, X_lsa).flatten()
+    
+    # Get top 5 similar documents
+    top_indices = cosine_similarities.argsort()[-5:][::-1]
+    top_similarities = cosine_similarities[top_indices]
+    top_documents = [newsgroups.data[i] for i in top_indices]
+    
+    return top_documents, top_similarities.tolist(), top_indices.tolist()
 
 @app.route('/')
 def index():
